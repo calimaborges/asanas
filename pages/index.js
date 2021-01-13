@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { useState, useEffect } from "react";
 import produce from "immer";
 import * as datastore from "../libs/datastore";
@@ -6,12 +7,15 @@ import AsanaForm from "../components/asana-form";
 import SelectDatastore from "../components/select-datastore";
 import Button from "../components/button";
 import * as Table from "../components/table";
+import SearchIcon from "../components/icons/search-icon";
+import normalizarString from "../libs/normalize-string";
 
 export default function Home() {
   const [handle, setHandle] = useState(null);
   const [database, setDatabase] = useState(null);
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState(null);
+  const [filterText, setFilterText] = useState("");
 
   function handleClose() {
     setEdit(null);
@@ -70,6 +74,11 @@ export default function Home() {
     };
   }
 
+  function filtrar(asana) {
+    if (!filterText) return true;
+    return normalizarString(asana.nome).indexOf(normalizarString(filterText)) > -1;
+  }
+
   if (!handle) {
     return <SelectDatastore create={create} load={load} />;
   }
@@ -80,58 +89,80 @@ export default function Home() {
 
   return (
     <>
-      <div className="p-4 bg-gray-100 flex justify-between">
+      <Head>
+        <title>Ásanas</title>
+      </Head>
+      <div className="p-4 bg-gray-50 flex justify-between fixed w-full shadow-md">
         <Button className="bg-green-500" onClick={handleOpen}>
           Novo Asana
         </Button>
+        <form className="flex p-1 border shadow rounded-full overflow-hidden focus-within:shadow-outline-blue w-1/2 bg-white">
+          <input
+            className="flex-grow text-gray-700 mx-4 focus:outline-none"
+            name="tema-input"
+            placeholder="Pesquise por um ásana..."
+            type="search"
+            value={filterText}
+            onChange={(event) => setFilterText(event.target.value)}
+          />
+          <button
+            type="submit"
+            className="ml-2 px-4 py-2 text-white rounded-full hover:bg-blue-100 focus:bg-blue-100 focus:outline-none"
+          >
+            <SearchIcon className="text-blue-500 h-4" />
+          </button>
+        </form>
         <Button className="bg-red-500" onClick={close}>
           Fechar banco de dados
         </Button>
       </div>
-      <div className="flex flex-col p-4">
-        <h1 className="text-4xl font-extrabold mx-2 mt-2">Asanas</h1>
-
+      <div className="flex flex-col pt-24">
         {open && <AsanaForm database={database} setDatabase={setDatabase} onClose={handleClose} edit={edit} />}
 
         {database.asanas.length === 0 && <p className="m-2">Nenhum Ásana cadastrado</p>}
         {database.asanas.length > 0 && (
-          <Table.Container>
-            <thead className="bg-gray-50">
-              <tr>
-                <Table.HeadRow>Nome</Table.HeadRow>
-                <Table.HeadRow>Plano</Table.HeadRow>
-                <Table.HeadRow>Equilibrio</Table.HeadRow>
-                <Table.HeadRow>Alongamento</Table.HeadRow>
-                <Table.HeadRow>Fortalecimento</Table.HeadRow>
-                <Table.HeadRow>Ações</Table.HeadRow>
-              </tr>
-            </thead>
-            <tbody>
-              {database.asanas.map((asana, i) => (
-                <tr key={i}>
-                  <Table.Row>
-                    {asana.nome}
-                    {asana.paginas && <> ({asana.paginas})</>}
-                  </Table.Row>
-                  <Table.Row>{enumerar(asana.planos)}</Table.Row>
-                  <Table.Row>{enumerar(asana.equilibrios)}</Table.Row>
-                  <Table.Row>{enumerar(asana.alongamentos)}</Table.Row>
-                  <Table.Row>{enumerar(asana.fortalecimentos)}</Table.Row>
-                  <Table.Row>
-                    <Table.Button
-                      className="mx-2 bg-gray-100 text-gray-800 focus:ring-gray-500"
-                      onClick={handleEdit(i)}
-                    >
-                      Editar
-                    </Table.Button>
-                    <Table.Button className="mx-2 bg-red-100 text-red-800 focus:ring-red-500" onClick={handleDelete(i)}>
-                      Apagar
-                    </Table.Button>
-                  </Table.Row>
+          <>
+            <Table.Container>
+              <thead className="bg-gray-100">
+                <tr>
+                  <Table.HeadRow className="w-3/12">Ásana</Table.HeadRow>
+                  <Table.HeadRow className="w-2/12">Plano</Table.HeadRow>
+                  <Table.HeadRow className="w-2/12">Equilibrio</Table.HeadRow>
+                  <Table.HeadRow className="w-2/12">Alongamento</Table.HeadRow>
+                  <Table.HeadRow className="w-2/12">Fortalecimento</Table.HeadRow>
+                  <Table.HeadRow className="w-1/12 text-center">Ações</Table.HeadRow>
                 </tr>
-              ))}
-            </tbody>
-          </Table.Container>
+              </thead>
+              <tbody>
+                {database.asanas.filter(filtrar).map((asana, i) => (
+                  <tr key={i}>
+                    <Table.Row>
+                      {asana.nome}
+                      {asana.paginas && <> ({asana.paginas})</>}
+                    </Table.Row>
+                    <Table.Row>{enumerar(asana.planos)}</Table.Row>
+                    <Table.Row>{enumerar(asana.equilibrios)}</Table.Row>
+                    <Table.Row>{enumerar(asana.alongamentos)}</Table.Row>
+                    <Table.Row>{enumerar(asana.fortalecimentos)}</Table.Row>
+                    <Table.Row>
+                      <Table.Button
+                        className="mx-2 bg-gray-100 text-gray-800 focus:ring-gray-500"
+                        onClick={handleEdit(i)}
+                      >
+                        Editar
+                      </Table.Button>
+                      <Table.Button
+                        className="mx-2 bg-red-100 text-red-800 focus:ring-red-500"
+                        onClick={handleDelete(i)}
+                      >
+                        Apagar
+                      </Table.Button>
+                    </Table.Row>
+                  </tr>
+                ))}
+              </tbody>
+            </Table.Container>
+          </>
         )}
       </div>
     </>
