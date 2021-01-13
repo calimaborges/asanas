@@ -148,6 +148,7 @@ export default function AsanaForm({ setDatabase, database, edit, onClose }) {
         <fieldset className="mt-3">
           <legend className="my-1 font-semibold">Equilibrio vertebral</legend>
           <div className="flex">
+            <SelectItem type="checkbox" name="equilibrios" value="equilibrio" />
             <SelectItem type="checkbox" name="equilibrios" value="tracao" />
             <SelectItem type="checkbox" name="equilibrios" value="flexao" />
             <SelectItem type="checkbox" name="equilibrios" value="extensao" />

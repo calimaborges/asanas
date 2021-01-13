@@ -5,6 +5,7 @@ export default function descricao(id) {
     case "plano-baixo": return "plano baixo";
     case "invertida": return "invertida";
 
+    case "equilibrio": return "equilíbrio";
     case "tracao": return "tração";
     case "flexao": return "flexão";
     case "extensao": return "extensão";
