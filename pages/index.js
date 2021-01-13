@@ -1,133 +1,140 @@
-import useDatastore from "../libs/use-datastore";
+import { useState, useEffect } from "react";
 import produce from "immer";
+import AsanaForm from "../components/asana-form";
+import SelectDatastore from "../components/select-datastore";
+import * as datastore from "../libs/datastore";
+import Button from "../components/button";
+import * as Table from "../components/table";
+import descricao from "../libs/descricao";
 
 export default function Index() {
-  const [database, setDatabase, load, save] = useDatastore();
+  const [handle, setHandle] = useState(null);
+  const [database, setDatabase] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [edit, setEdit] = useState(null);
 
-  function cadastrar(event) {
-    event.preventDefault();
+  function handleClose() {
+    setEdit(null);
+    setOpen(false);
+  }
 
-    const form = event.target;
-    const nome = form.elements.nome.value;
-    const plano = form.elements.plano.value;
-    const equilibrios = [];
-    for (const e of form.elements.equilibrio) {
-      if (e.checked) equilibrios.push(e.value);
-    }
-    const alongamentos = [];
-    for (const e of form.elements.alongamento) {
-      if (e.checked) alongamentos.push(e.value);
-    }
-    const fortalecimentos = [];
-    for (const e of form.elements.fortalecimento) {
-      if (e.checked) fortalecimentos.push(e.value);
-    }
-    const paginas = form.elements.paginas.value;
-    form.reset();
+  function handleOpen() {
+    setEdit(null);
+    setOpen(true);
+  }
 
-    setDatabase(
-      produce((draft) => {
-        if (draft.asanas === undefined) draft.asanas = [];
-        draft.asanas.push({ nome, plano, equilibrios, alongamentos, fortalecimentos, paginas });
-      })
-    );
+  useEffect(() => {
+    if (handle) {
+      datastore.read(handle).then(setDatabase);
+    }
+  }, [handle]);
+
+  useEffect(() => {
+    if (handle && database) {
+      datastore.write(handle, database);
+    }
+  }, [handle, database]);
+
+  async function create() {
+    const handle = await datastore.create();
+    setHandle(handle);
+  }
+
+  async function load() {
+    {
+      const handle = await datastore.load();
+      setHandle(handle);
+    }
+  }
+
+  function close() {
+    setHandle(null);
+  }
+
+  function handleEdit(i) {
+    return function () {
+      setEdit(i);
+      setOpen(true);
+    };
+  }
+
+  function handleDelete(i) {
+    return function () {
+      if (window.confirm(`Realmente apagar ${database.asanas[i].nome}?`)) {
+        setDatabase(
+          produce((draft) => {
+            draft.asanas.splice(i, 1);
+          })
+        );
+      }
+    };
+  }
+
+  if (!handle) {
+    return <SelectDatastore create={create} load={load} />;
+  }
+
+  if (!database) {
+    return null;
   }
 
   return (
-    <div className="flex flex-col p-4">
-      <button onClick={save}>New database</button>
-      <button onClick={load}>Load database</button>
-      <h1 className="text-4xl font-extrabold">Asanas</h1>
-      <h2 className="text-2xl font-bold">Cadastro</h2>
+    <>
+      <div className="p-4 bg-gray-100 flex justify-between">
+        <Button className="bg-green-500" onClick={handleOpen}>
+          Novo Asana
+        </Button>
+        <Button className="bg-red-500" onClick={close}>
+          Fechar banco de dados
+        </Button>
+      </div>
+      <div className="flex flex-col p-4">
+        <h1 className="text-4xl font-extrabold mx-2 mt-2">Asanas</h1>
 
-      <form onSubmit={cadastrar}>
-        <label htmlFor="nome">Nome</label>
-        <input id="nome" name="nome" type="text" />
-
-        <label htmlFor="paginas">Páginas</label>
-        <input id="paginas" name="paginas" type="text" />
-
-        {/* Posição do corpo em relação ao solo: 1o Plano Alto, 2o Plano Médio, 3o Plano Baixo, 4o Invertida */}
-        <fieldset>
-          <legend>Plano</legend>
-          <input type="radio" name="plano" id="plano-alto" value="plano-alto" />
-          <label htmlFor="plano-alto">Plano alto</label>
-          <input type="radio" name="plano" id="plano-medio" value="plano-medio" />
-          <label htmlFor="plano-medio">Plano médio</label>
-          <input type="radio" name="plano" id="plano-baixo" value="plano-baixo" />
-          <label htmlFor="plano-baixo">Plano baixo</label>
-          <input type="radio" name="plano" id="invertida" value="plano-invetida" />
-          <label htmlFor="invertida">Invertida</label>
-        </fieldset>
-        {/* Descanso: Sem equilibro vertebral, alongamento ou fortalecimento */}
-        {/* Equilibrio Vertebral: Equilibrio, Tração, Flexão da coluna, Extensão da coluna, Flexão lateral da coluna, Torção da coluna */}
-        <fieldset>
-          <legend>Equilibrio vertebral</legend>
-          <input type="checkbox" name="equilibrio" id="equilibrio" value="equilibrio" />
-          <label htmlFor="equilibrio">Equilíbrio</label>
-          <input type="checkbox" name="equilibrio" id="tracao" value="tracao" />
-          <label htmlFor="tracao">Tração</label>
-          <input type="checkbox" name="equilibrio" id="flexao" value="flexao" />
-          <label htmlFor="flexao">Flexão</label>
-          <input type="checkbox" name="equilibrio" id="extensao" value="extensao" />
-          <label htmlFor="extensao">Extensão</label>
-          <input type="checkbox" name="equilibrio" id="flexao-lateral" value="flexao-lateral" />
-          <label htmlFor="flexao-lateral">Flexão lateral</label>
-          <input type="checkbox" name="equilibrio" id="torcao" value="torcao" />
-          <label htmlFor="torcao">Torção</label>
-        </fieldset>
-        {/* Alongamento: Peitoral (membros superiores frente), Costas (membros superiores dorso), Abdômen, Pernas (membros inferiores: quadril, coxas, pernas e pés)  */}
-        <fieldset>
-          <legend>Alongamento</legend>
-          <input type="checkbox" name="alongamento" id="alongamento-peitoral" value="peitoral" />
-          <label htmlFor="alongamento-peitoral">Peitoral</label>
-          <input type="checkbox" name="alongamento" id="alongamento-costas" value="costas" />
-          <label htmlFor="alongamento-costas">Costas</label>
-          <input type="checkbox" name="alongamento" id="alongamento-abdomen" value="abdomen" />
-          <label htmlFor="alongamento-abdomen">Abdômen</label>
-          <input type="checkbox" name="alongamento" id="alongamento-pernas" value="pernas" />
-          <label htmlFor="alongamento-pernas">Pernas</label>
-        </fieldset>
-        {/* Fortalecimento: Peitoral (membros superiores frente), Costas (membros superiores dorso), Abdômen, Pernas (membros inferiores: quadril, coxas, pernas e pés)  */}
-        <fieldset>
-          <legend>Fortalecimento</legend>
-          <input type="checkbox" name="fortalecimento" id="fortalecimento-peitoral" value="peitoral" />
-          <label htmlFor="fortalecimento-peitoral">Peitoral</label>
-          <input type="checkbox" name="fortalecimento" id="fortalecimento-costas" value="costas" />
-          <label htmlFor="fortalecimento-costas">Costas</label>
-          <input type="checkbox" name="fortalecimento" id="fortalecimento-abdomen" value="abdomen" />
-          <label htmlFor="fortalecimento-abdomen">Abdômen</label>
-          <input type="checkbox" name="fortalecimento" id="fortalecimento-pernas" value="pernas" />
-          <label htmlFor="fortalecimento-pernas">Pernas</label>
-        </fieldset>
-
-        <button type="submit">Cadastrar</button>
-      </form>
-      <div>
-        <table>
-          <thead>
+        {open && <AsanaForm database={database} setDatabase={setDatabase} onClose={handleClose} edit={edit} />}
+        <Table.Container>
+          <thead className="bg-gray-50">
             <tr>
-              <th>Nome</th>
-              <th>Páginas</th>
-              <th>Equilibrio</th>
-              <th>Alongamento</th>
-              <th>Fortalecimento</th>
+              <Table.HeadRow>Nome</Table.HeadRow>
+              <Table.HeadRow>Plano</Table.HeadRow>
+              <Table.HeadRow>Equilibrio</Table.HeadRow>
+              <Table.HeadRow>Alongamento</Table.HeadRow>
+              <Table.HeadRow>Fortalecimento</Table.HeadRow>
+              <Table.HeadRow>Ações</Table.HeadRow>
             </tr>
           </thead>
           <tbody>
-            {console.log(database.asanas)}
-            {database.asanas && database.asanas.map(asana => (
-              <tr key={asana.nome}>
-                <td>{asana.nome}</td>
-                <td>{asana.paginas}</td>
-                <td>{asana.equilibrios}</td>
-                <td>{asana.alongamentos}</td>
-                <td>{asana.fortalecimentos}</td>
+            {database.asanas.map((asana, i) => (
+              <tr key={i}>
+                <Table.Row>
+                  {asana.nome}
+                  {asana.paginas && <> ({asana.paginas})</>}
+                </Table.Row>
+                <Table.Row>{enumerar(asana.planos)}</Table.Row>
+                <Table.Row>{enumerar(asana.equilibrios)}</Table.Row>
+                <Table.Row>{enumerar(asana.alongamentos)}</Table.Row>
+                <Table.Row>{enumerar(asana.fortalecimentos)}</Table.Row>
+                <Table.Row>
+                  <Table.Button className="mx-2 bg-gray-100 text-gray-800 focus:ring-gray-500" onClick={handleEdit(i)}>
+                    Editar
+                  </Table.Button>
+                  <Table.Button className="mx-2 bg-red-100 text-red-800 focus:ring-red-500" onClick={handleDelete(i)}>
+                    Apagar
+                  </Table.Button>
+                </Table.Row>
               </tr>
             ))}
           </tbody>
-        </table>  
+        </Table.Container>
       </div>
-    </div>
+    </>
   );
+}
+
+function enumerar(arr) {
+  if (arr) {
+    return arr.map(descricao).join(", ");
+  } else {
+    return "";
+  }
 }
