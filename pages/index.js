@@ -7,7 +7,7 @@ import Button from "../components/button";
 import * as Table from "../components/table";
 import descricao from "../libs/descricao";
 
-export default function Index() {
+export default function Home() {
   const [handle, setHandle] = useState(null);
   const [database, setDatabase] = useState(null);
   const [open, setOpen] = useState(false);
