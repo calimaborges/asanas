@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import produce from "immer";
+import * as datastore from "../libs/datastore";
+import descricao from "../libs/descricao";
 import AsanaForm from "../components/asana-form";
 import SelectDatastore from "../components/select-datastore";
-import * as datastore from "../libs/datastore";
 import Button from "../components/button";
 import * as Table from "../components/table";
-import descricao from "../libs/descricao";
 
 export default function Home() {
   const [handle, setHandle] = useState(null);
@@ -92,40 +92,47 @@ export default function Home() {
         <h1 className="text-4xl font-extrabold mx-2 mt-2">Asanas</h1>
 
         {open && <AsanaForm database={database} setDatabase={setDatabase} onClose={handleClose} edit={edit} />}
-        <Table.Container>
-          <thead className="bg-gray-50">
-            <tr>
-              <Table.HeadRow>Nome</Table.HeadRow>
-              <Table.HeadRow>Plano</Table.HeadRow>
-              <Table.HeadRow>Equilibrio</Table.HeadRow>
-              <Table.HeadRow>Alongamento</Table.HeadRow>
-              <Table.HeadRow>Fortalecimento</Table.HeadRow>
-              <Table.HeadRow>Ações</Table.HeadRow>
-            </tr>
-          </thead>
-          <tbody>
-            {database.asanas.map((asana, i) => (
-              <tr key={i}>
-                <Table.Row>
-                  {asana.nome}
-                  {asana.paginas && <> ({asana.paginas})</>}
-                </Table.Row>
-                <Table.Row>{enumerar(asana.planos)}</Table.Row>
-                <Table.Row>{enumerar(asana.equilibrios)}</Table.Row>
-                <Table.Row>{enumerar(asana.alongamentos)}</Table.Row>
-                <Table.Row>{enumerar(asana.fortalecimentos)}</Table.Row>
-                <Table.Row>
-                  <Table.Button className="mx-2 bg-gray-100 text-gray-800 focus:ring-gray-500" onClick={handleEdit(i)}>
-                    Editar
-                  </Table.Button>
-                  <Table.Button className="mx-2 bg-red-100 text-red-800 focus:ring-red-500" onClick={handleDelete(i)}>
-                    Apagar
-                  </Table.Button>
-                </Table.Row>
+
+        {database.asanas.length === 0 && <p className="m-2">Nenhum Ásana cadastrado</p>}
+        {database.asanas.length > 0 && (
+          <Table.Container>
+            <thead className="bg-gray-50">
+              <tr>
+                <Table.HeadRow>Nome</Table.HeadRow>
+                <Table.HeadRow>Plano</Table.HeadRow>
+                <Table.HeadRow>Equilibrio</Table.HeadRow>
+                <Table.HeadRow>Alongamento</Table.HeadRow>
+                <Table.HeadRow>Fortalecimento</Table.HeadRow>
+                <Table.HeadRow>Ações</Table.HeadRow>
               </tr>
-            ))}
-          </tbody>
-        </Table.Container>
+            </thead>
+            <tbody>
+              {database.asanas.map((asana, i) => (
+                <tr key={i}>
+                  <Table.Row>
+                    {asana.nome}
+                    {asana.paginas && <> ({asana.paginas})</>}
+                  </Table.Row>
+                  <Table.Row>{enumerar(asana.planos)}</Table.Row>
+                  <Table.Row>{enumerar(asana.equilibrios)}</Table.Row>
+                  <Table.Row>{enumerar(asana.alongamentos)}</Table.Row>
+                  <Table.Row>{enumerar(asana.fortalecimentos)}</Table.Row>
+                  <Table.Row>
+                    <Table.Button
+                      className="mx-2 bg-gray-100 text-gray-800 focus:ring-gray-500"
+                      onClick={handleEdit(i)}
+                    >
+                      Editar
+                    </Table.Button>
+                    <Table.Button className="mx-2 bg-red-100 text-red-800 focus:ring-red-500" onClick={handleDelete(i)}>
+                      Apagar
+                    </Table.Button>
+                  </Table.Row>
+                </tr>
+              ))}
+            </tbody>
+          </Table.Container>
+        )}
       </div>
     </>
   );
