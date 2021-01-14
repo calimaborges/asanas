@@ -10,6 +10,8 @@ import * as Table from "../components/table";
 import SearchIcon from "../components/icons/search-icon";
 import normalizarString from "../libs/normalizar-string";
 import MultiAutocompleteSelect from "../components/multi-autocomplete-select";
+import ChevronUpIcon from "../components/icons/chevron-up-icon";
+import ChevronDownIcon from "../components/icons/chevron-down-icon";
 
 export default function Home() {
   const [handle, setHandle] = useState(null);
@@ -21,6 +23,7 @@ export default function Home() {
   const [filterEquilibrios, setFilterEquilibrios] = useState([]);
   const [filterAlongamentos, setFilterAlongamentos] = useState([]);
   const [filterFortalecimentos, setFilterFortalecimentos] = useState([]);
+  const [order, setOrder] = useState(["paginas", "asc"]);
 
   function handleClose() {
     setEdit(null);
@@ -105,6 +108,67 @@ export default function Home() {
     return keepText && planoKeep && equilibrioKeep && alongamentoKeep && fortalecimentoKeep;
   }
 
+  function ordenar(asana1, asana2) {
+    let coluna1;
+    let coluna2;
+
+    const [coluna, direcao] = order;
+
+    if (coluna === "nome") {
+      coluna1 = asana1.nome;
+      coluna2 = asana2.nome;
+    } else if (coluna === "planos") {
+      coluna1 = asana1.planos.join(",");
+      coluna2 = asana2.planos.join(",");
+    } else if (coluna === "equilibrios") {
+      coluna1 = asana1.equilibrios.join(",");
+      coluna2 = asana2.equilibrios.join(",");
+    } else if (coluna === "alongamentos") {
+      coluna1 = asana1.alongamentos.join(",");
+      coluna2 = asana2.alongamentos.join(",");
+    } else if (coluna === "fortalecimentos") {
+      coluna1 = asana1.fortalecimentos.join(",");
+      coluna2 = asana2.fortalecimentos.join(",");
+    } else {
+      coluna1 = asana1.paginas;
+      coluna2 = asana2.paginas;
+    }
+
+    if (coluna1 > coluna2) {
+      return direcao === "asc" ? 1 : -1;
+    } else if (coluna1 < coluna2) {
+      return direcao === "asc" ? -1 : 1;
+    } else {
+      return 0;
+    }
+  }
+
+  function handleOrder(novaColuna) {
+    return function () {
+      let novaDirecao = "asc";
+      const [coluna, direcao] = order;
+      if (coluna === novaColuna) {
+        if (direcao === "asc") {
+          novaDirecao = "desc";
+        } else {
+          novaDirecao = "asc";
+        }
+      }
+
+      setOrder([novaColuna, novaDirecao]);
+    };
+  }
+
+  function chevronColuna(col) {
+    const [coluna, direcao] = order;
+    if (col !== coluna) return null;
+    if (direcao === "asc") {
+      return <ChevronDownIcon className="h-5 w-5" />;
+    } else {
+      return <ChevronUpIcon className="h-5 w-5" />;
+    }
+  }
+
   if (!handle) {
     return <SelectDatastore create={create} load={load} />;
   }
@@ -183,40 +247,61 @@ export default function Home() {
             <Table.Container>
               <thead className="bg-gray-100">
                 <tr>
-                  <Table.HeadRow className="w-2/12">Ásana</Table.HeadRow>
-                  <Table.HeadRow className="w-2/12">Plano</Table.HeadRow>
-                  <Table.HeadRow className="w-2/12">Equilibrio</Table.HeadRow>
-                  <Table.HeadRow className="w-2/12">Alongamento</Table.HeadRow>
-                  <Table.HeadRow className="w-2/12">Fortalecimento</Table.HeadRow>
-                  <Table.HeadRow className="w-1/12">Páginas</Table.HeadRow>
+                  <Table.HeadRow onClick={handleOrder("nome")} className="w-2/12 cursor-pointer">
+                    <div className="flex items-center">Ásana {chevronColuna("nome")}</div>
+                  </Table.HeadRow>
+                  <Table.HeadRow onClick={handleOrder("planos")} className="w-2/12 cursor-pointer">
+                    <div className="flex items-center">Plano {chevronColuna("planos")}</div>
+                  </Table.HeadRow>
+                  <Table.HeadRow onClick={handleOrder("equilibrios")} className="w-2/12 cursor-pointer">
+                    <div className="flex items-center">Equilibrio {chevronColuna("equilibrios")}</div>
+                  </Table.HeadRow>
+                  <Table.HeadRow onClick={handleOrder("alongamentos")} className="w-2/12 cursor-pointer">
+                    <div className="flex items-center">Alongamento {chevronColuna("alongamentos")}</div>
+                  </Table.HeadRow>
+                  <Table.HeadRow onClick={handleOrder("fortalecimentos")} className="w-2/12 cursor-pointer">
+                    <div className="flex items-center">Fortalecimento {chevronColuna("fortalecimentos")}</div>
+                  </Table.HeadRow>
+                  <Table.HeadRow onClick={handleOrder("paginas")} className="w-1/12 text-center cursor-pointer">
+                    <div className="flex items-center">Páginas {chevronColuna("paginas")}</div>
+                  </Table.HeadRow>
                   <Table.HeadRow className="w-1/12 text-center">Ações</Table.HeadRow>
                 </tr>
               </thead>
               <tbody>
-                {database.asanas.filter(filtrar).map((asana) => (
-                  <tr key={asana.nome}>
-                    <Table.Row>{asana.nome}</Table.Row>
-                    <Table.Row>{enumerar(asana.planos, planos)}</Table.Row>
-                    <Table.Row>{enumerar(asana.equilibrios, equilibrios)}</Table.Row>
-                    <Table.Row>{enumerar(asana.alongamentos, alongamentos)}</Table.Row>
-                    <Table.Row>{enumerar(asana.fortalecimentos, fortalecimentos)}</Table.Row>
-                    <Table.Row>{asana.paginas}</Table.Row>
-                    <Table.Row>
-                      <Table.Button
-                        className="mx-2 bg-gray-100 text-gray-800 focus:ring-gray-500"
-                        onClick={handleEdit(asana.nome)}
-                      >
-                        Editar
-                      </Table.Button>
-                      <Table.Button
-                        className="mx-2 bg-red-100 text-red-800 focus:ring-red-500"
-                        onClick={handleDelete(asana.nome)}
-                      >
-                        Apagar
-                      </Table.Button>
-                    </Table.Row>
-                  </tr>
-                ))}
+                {database.asanas
+                  .filter(filtrar)
+                  .sort(ordenar)
+                  .map((asana) => (
+                    <tr key={asana.nome}>
+                      <Table.Row className="font-semibold">{asana.nome}</Table.Row>
+                      <Table.Row className="text-sm text-gray-600">{enumerar(asana.planos, planos)}</Table.Row>
+                      <Table.Row className="text-sm text-gray-600">
+                        {enumerar(asana.equilibrios, equilibrios)}
+                      </Table.Row>
+                      <Table.Row className="text-sm text-gray-600">
+                        {enumerar(asana.alongamentos, alongamentos)}
+                      </Table.Row>
+                      <Table.Row className="text-sm text-gray-600">
+                        {enumerar(asana.fortalecimentos, fortalecimentos)}
+                      </Table.Row>
+                      <Table.Row className="text-sm text-gray-600 text-center">{asana.paginas}</Table.Row>
+                      <Table.Row>
+                        <Table.Button
+                          className="mx-2 bg-gray-100 text-gray-800 focus:ring-gray-500"
+                          onClick={handleEdit(asana.nome)}
+                        >
+                          Editar
+                        </Table.Button>
+                        <Table.Button
+                          className="mx-2 bg-red-100 text-red-800 focus:ring-red-500"
+                          onClick={handleDelete(asana.nome)}
+                        >
+                          Apagar
+                        </Table.Button>
+                      </Table.Row>
+                    </tr>
+                  ))}
               </tbody>
             </Table.Container>
           </>
