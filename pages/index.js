@@ -2,13 +2,14 @@ import Head from "next/head";
 import { useState, useEffect } from "react";
 import produce from "immer";
 import * as datastore from "../libs/datastore";
-import descricao from "../libs/descricao";
+import options from "../libs/options";
 import AsanaForm from "../components/asana-form";
 import SelectDatastore from "../components/select-datastore";
 import Button from "../components/button";
 import * as Table from "../components/table";
 import SearchIcon from "../components/icons/search-icon";
-import normalizarString from "../libs/normalize-string";
+import normalizarString from "../libs/normalizar-string";
+import MultiAutocompleteSelect from "../components/multi-autocomplete-select";
 
 export default function Home() {
   const [handle, setHandle] = useState(null);
@@ -55,19 +56,19 @@ export default function Home() {
     setHandle(null);
   }
 
-  function handleEdit(i) {
+  function handleEdit(nome) {
     return function () {
-      setEdit(i);
+      setEdit(nome);
       setOpen(true);
     };
   }
 
-  function handleDelete(i) {
+  function handleDelete(nome) {
     return function () {
-      if (window.confirm(`Realmente apagar ${database.asanas[i].nome}?`)) {
+      if (window.confirm(`Realmente apagar ${database.asanas.find((a) => a.nome === nome).nome}?`)) {
         setDatabase(
           produce((draft) => {
-            draft.asanas.splice(i, 1);
+            draft.asanas = draft.asanas.filter((a) => a.nome !== nome);
           })
         );
       }
@@ -112,6 +113,13 @@ export default function Home() {
             <SearchIcon className="text-blue-500 h-4" />
           </button>
         </form>
+        {/* <MultiAutocompleteSelect
+          options={filtros.magistrados}
+          label="Filtrar por plano"
+          onSelect={(id) => setSelectedMagistrados((items) => [...items, id])}
+          onUnselect={(id) => setSelectedMagistrados((items) => items.filter((i) => id !== i))}
+          selected={selectedMagistrados}
+        /> */}
         <Button className="bg-red-500" onClick={close}>
           Fechar banco de dados
         </Button>
@@ -134,8 +142,8 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {database.asanas.filter(filtrar).map((asana, i) => (
-                  <tr key={i}>
+                {database.asanas.filter(filtrar).map((asana) => (
+                  <tr key={asana.nome}>
                     <Table.Row>
                       {asana.nome}
                       {asana.paginas && <> ({asana.paginas})</>}
@@ -147,13 +155,13 @@ export default function Home() {
                     <Table.Row>
                       <Table.Button
                         className="mx-2 bg-gray-100 text-gray-800 focus:ring-gray-500"
-                        onClick={handleEdit(i)}
+                        onClick={handleEdit(asana.nome)}
                       >
                         Editar
                       </Table.Button>
                       <Table.Button
                         className="mx-2 bg-red-100 text-red-800 focus:ring-red-500"
-                        onClick={handleDelete(i)}
+                        onClick={handleDelete(asana.nome)}
                       >
                         Apagar
                       </Table.Button>
@@ -171,7 +179,7 @@ export default function Home() {
 
 function enumerar(arr) {
   if (arr) {
-    return arr.map(descricao).join(", ");
+    return arr.map((i) => options[i].descricao).join(", ");
   } else {
     return "";
   }

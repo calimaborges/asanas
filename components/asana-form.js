@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import produce from "immer";
-import descricao from "../libs/descricao";
+import options from "../libs/options";
 import Button from "./button";
 
 function createAsana() {
@@ -21,7 +21,7 @@ export default function AsanaForm({ setDatabase, database, edit, onClose }) {
 
   useEffect(() => {
     if (edit !== null) {
-      setAsana(database.asanas[edit]);
+      setAsana(database.asanas.find((a) => a.nome === edit));
     } else {
       setAsana(createAsana());
     }
@@ -35,7 +35,8 @@ export default function AsanaForm({ setDatabase, database, edit, onClose }) {
     setDatabase(
       produce((draft) => {
         if (edit !== null) {
-          draft.asanas[edit] = asana;
+          const index = draft.asanas.findIndex((a) => a.nome === edit);
+          draft.asanas[index] = asana;
         } else {
           draft.asanas.push(asana);
         }
@@ -69,11 +70,11 @@ export default function AsanaForm({ setDatabase, database, edit, onClose }) {
     };
   }
 
-  function SelectItem({ name, value, type }) {
+  function SelectItem({ name, value, type, children }) {
     return (
       <div className="mr-2 flex flex-col w-20 border rounded-md focus-within:border-blue-500 focus-within:text-blue-700">
         <label htmlFor={value} className="py-1 text-xs font-semibold text-center capitalize">
-          {descricao(value)}
+          {children}
         </label>
         <input
           type={type}
@@ -137,10 +138,13 @@ export default function AsanaForm({ setDatabase, database, edit, onClose }) {
         <fieldset className="mt-3">
           <legend className="my-1 font-semibold">Plano</legend>
           <div className="flex">
-            <SelectItem type="checkbox" name="planos" value="plano-alto" />
-            <SelectItem type="checkbox" name="planos" value="plano-medio" />
-            <SelectItem type="checkbox" name="planos" value="plano-baixo" />
-            <SelectItem type="checkbox" name="planos" value="invertida" />
+            {Object.entries(options)
+              .filter(([_, value]) => value.type === "plano")
+              .map(([key, value]) => (
+                <SelectItem key={key} type="checkbox" name="planos" value={key}>
+                  {value.descricao}
+                </SelectItem>
+              ))}
           </div>
         </fieldset>
         {/* Descanso: Sem equilibro vertebral, alongamento ou fortalecimento */}
@@ -148,32 +152,39 @@ export default function AsanaForm({ setDatabase, database, edit, onClose }) {
         <fieldset className="mt-3">
           <legend className="my-1 font-semibold">Equilibrio vertebral</legend>
           <div className="flex">
-            <SelectItem type="checkbox" name="equilibrios" value="equilibrio" />
-            <SelectItem type="checkbox" name="equilibrios" value="tracao" />
-            <SelectItem type="checkbox" name="equilibrios" value="flexao" />
-            <SelectItem type="checkbox" name="equilibrios" value="extensao" />
-            <SelectItem type="checkbox" name="equilibrios" value="flexao-lateral" />
-            <SelectItem type="checkbox" name="equilibrios" value="torcao" />
+            {Object.entries(options)
+              .filter(([_, value]) => value.type === "equilibrio")
+              .map(([key, value]) => (
+                <SelectItem key={key} type="checkbox" name="equilibrios" value={key}>
+                  {value.descricao}
+                </SelectItem>
+              ))}
           </div>
         </fieldset>
         {/* Alongamento: Peitoral (membros superiores frente), Costas (membros superiores dorso), Abdômen, Pernas (membros inferiores: quadril, coxas, pernas e pés)  */}
         <fieldset className="mt-3">
           <legend className="my-1 font-semibold">Alongamento</legend>
           <div className="flex">
-            <SelectItem type="checkbox" name="alongamentos" value="alongamento-peitoral" />
-            <SelectItem type="checkbox" name="alongamentos" value="alongamento-costas" />
-            <SelectItem type="checkbox" name="alongamentos" value="alongamento-abdomen" />
-            <SelectItem type="checkbox" name="alongamentos" value="alongamento-pernas" />
+            {Object.entries(options)
+              .filter(([_, value]) => value.type === "alongamento")
+              .map(([key, value]) => (
+                <SelectItem key={key} type="checkbox" name="alongamentos" value={key}>
+                  {value.descricao}
+                </SelectItem>
+              ))}
           </div>
         </fieldset>
         {/* Fortalecimento: Peitoral (membros superiores frente), Costas (membros superiores dorso), Abdômen, Pernas (membros inferiores: quadril, coxas, pernas e pés)  */}
         <fieldset className="mt-3">
           <legend className="my-1 font-semibold">Fortalecimento</legend>
           <div className="flex">
-            <SelectItem type="checkbox" name="fortalecimentos" value="fortalecimento-peitoral" />
-            <SelectItem type="checkbox" name="fortalecimentos" value="fortalecimento-costas" />
-            <SelectItem type="checkbox" name="fortalecimentos" value="fortalecimento-abdomen" />
-            <SelectItem type="checkbox" name="fortalecimentos" value="fortalecimento-pernas" />
+            {Object.entries(options)
+              .filter(([_, value]) => value.type === "fortalecimento")
+              .map(([key, value]) => (
+                <SelectItem key={key} type="checkbox" name="fortalecimentos" value={key}>
+                  {value.descricao}
+                </SelectItem>
+              ))}
           </div>
         </fieldset>
 
