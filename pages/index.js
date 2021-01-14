@@ -80,35 +80,29 @@ export default function Home() {
   }
 
   function filtrar(asana) {
-    let keep = false;
-    let filterApplied = false;
+    let keepText = filterText ? normalizarString(asana.nome).indexOf(normalizarString(filterText)) > -1 : true;
 
-    if (filterText) {
-      filterApplied = true;
-      keep = normalizarString(asana.nome).indexOf(normalizarString(filterText)) > -1;
-    }
-
+    let planoKeep = filterPlanos.length === 0;
     for (let filterPlano of filterPlanos) {
-      filterApplied = true;
-      keep = keep || asana.planos.includes(filterPlano);
+      planoKeep = planoKeep || asana.planos.includes(filterPlano);
     }
 
+    let equilibrioKeep = filterEquilibrios.length === 0;
     for (let filterEquilibrio of filterEquilibrios) {
-      filterApplied = true;
-      keep = keep || asana.equilibrios.includes(filterEquilibrio);
+      equilibrioKeep = equilibrioKeep || asana.equilibrios.includes(filterEquilibrio);
     }
 
+    let alongamentoKeep = filterAlongamentos.length === 0;
     for (let filterAlongamento of filterAlongamentos) {
-      filterApplied = true;
-      keep = keep || asana.alongamentos.includes(filterAlongamento);
+      alongamentoKeep = alongamentoKeep || asana.alongamentos.includes(filterAlongamento);
     }
 
+    let fortalecimentoKeep = filterFortalecimentos.length === 0;
     for (let filterFortalecimento of filterFortalecimentos) {
-      filterApplied = true;
-      keep = keep || asana.fortalecimentos.includes(filterFortalecimento);
+      fortalecimentoKeep = fortalecimentoKeep || asana.fortalecimentos.includes(filterFortalecimento);
     }
 
-    return keep || !filterApplied;
+    return keepText && planoKeep && equilibrioKeep && alongamentoKeep && fortalecimentoKeep;
   }
 
   if (!handle) {
